@@ -1,163 +1,318 @@
-import { useState } from "react";
-import {
-  generateStringLength,
-  toppings,
-} from "./game";
-
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-function App() {
-  const [mixCount, setMixCount] = useState(100);
-  const [karashi, setKarashi] = useState(false);
+export default function App() {
+  const [phase, setPhase] = useState("title");
 
-  const [selectedToppings, setSelectedToppings] =
-    useState([]);
+  const [mixPower, setMixPower] = useState(0);
 
-  const [actualLength, setActualLength] =
-    useState(null);
+  const mixPowerRef = useRef(0);
 
-  const [prediction, setPrediction] =
-    useState("");
+  const [prediction, setPrediction] = useState(100);
 
-  const [score, setScore] = useState(0);
+  const [actualLength, setActualLength] = useState(null);
 
-  const mixNatto = () => {
-    const result =
-      generateStringLength(
-        mixCount,
-        karashi,
-        selectedToppings
-      );
+  const [dragLength, setDragLength] = useState(0);
 
-    setActualLength(result);
+  const [result, setResult] = useState(null);
+
+  const [timeLeft, setTimeLeft] = useState(5);
+
+  const centerRef = useRef(null);
+
+  const lastAngleRef = useRef(null);
+
+  const draggingRef = useRef(false);
+
+  const startGame = () => {
+    setPhase("mix");
+    setTimeLeft(5);
   };
 
-  const submitPrediction = () => {
-    const diff = Math.abs(
-      Number(prediction) - actualLength
-    );
+  useEffect(() => {
+    if (phase !== "mix") return;
 
-    const earned = Math.max(
-      0,
-      100 - diff
-    );
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          const length = Math.max(
+            20,
+            Math.round(
+              Math.sqrt(mixPowerRef.current) * 12 +
+              Math.random() * 30
+            )
+          );
 
-    setScore((s) => s + earned);
+          setActualLength(length);
+          setPhase("predict");
 
-    alert(
-      `実際:${actualLength}cm\n誤差:${diff}cm\n+${earned}pt`
-    );
+          clearInterval(interval);
+
+          return 0;
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const handleMouseMove = (e) => {
+    if (phase !== "mix") return;
+
+    const rect =
+      centerRef.current.getBoundingClientRect();
+
+    const centerX =
+      rect.left + rect.width / 2;
+
+    const centerY =
+      rect.top + rect.height / 2;
+
+    const dx = e.clientX - centerX;
+    const dy = e.clientY - centerY;
+
+    const angle = Math.atan2(dy, dx);
+
+    if (lastAngleRef.current !== null) {
+      let diff =
+        angle - lastAngleRef.current;
+
+      if (diff > Math.PI)
+        diff -= Math.PI * 2;
+
+      if (diff < -Math.PI)
+        diff += Math.PI * 2;
+
+      mixPowerRef.current +=
+        Math.abs(diff) * 10;
+
+      setMixPower(
+        Math.round(mixPowerRef.current)
+      );
+    }
+
+    lastAngleRef.current = angle;
+  };
+
+  const startPull = () => {
+    setPhase("pull");
+  };
+
+  const handleDragStart = () => {
+    draggingRef.current = true;
+  };
+
+  const handleDragEnd = () => {
+    draggingRef.current = false;
+  };
+
+  const handleDragMove = () => {
+    if (!draggingRef.current) return;
+
+    if (phase !== "pull") return;
+
+    setDragLength((prev) => {
+      const next = prev + 3;
+
+      if (next >= actualLength) {
+        const diff = Math.abs(
+          prediction - actualLength
+        );
+
+        let rank = "D";
+
+        if (diff <= 5) rank = "S";
+        else if (diff <= 10) rank = "A";
+        else if (diff <= 20) rank = "B";
+        else if (diff <= 40) rank = "C";
+
+        setResult({
+          predicted: prediction,
+          actual: actualLength,
+          diff,
+          rank,
+        });
+
+        setPhase("result");
+      }
+
+      return next;
+    });
+  };
+
+  const restart = () => {
+    setPhase("title");
+
+    setMixPower(0);
+    mixPowerRef.current = 0;
+
+    setPrediction(100);
 
     setActualLength(null);
-    setPrediction("");
-  };
 
-  const toggleTopping = (id) => {
-    setSelectedToppings((prev) =>
-      prev.includes(id)
-        ? prev.filter((x) => x !== id)
-        : [...prev, id]
-    );
+    setDragLength(0);
+
+    setResult(null);
+
+    setTimeLeft(5);
+
+    lastAngleRef.current = null;
   };
 
   return (
-    <div className="container">
+    <div
+      className="container"
+      onMouseMove={handleMouseMove}
+    >
       <h1>🫘 OTTAN 🫘</h1>
 
-      <h2>
-        納豆糸長さ予測シミュレーター
-      </h2>
+      {phase === "title" && (
+        <>
+          <h2>
+            納豆糸長さ予測ゲーム
+          </h2>
 
-      <p>スコア: {score}</p>
-
-      <div>
-        <label>
-          混ぜ回数
-        </label>
-
-        <input
-          type="number"
-          value={mixCount}
-          onChange={(e) =>
-            setMixCount(
-              Number(e.target.value)
-            )
-          }
-        />
-      </div>
-
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={karashi}
-            onChange={(e) =>
-              setKarashi(
-                e.target.checked
-              )
-            }
-          />
-          からし
-        </label>
-      </div>
-
-      <h3>
-        課金薬味ショップ
-      </h3>
-
-      {Object.entries(toppings).map(
-        ([id, item]) => (
-          <label
-            key={id}
-            className="topping"
-          >
-            <input
-              type="checkbox"
-              checked={selectedToppings.includes(
-                id
-              )}
-              onChange={() =>
-                toggleTopping(id)
-              }
-            />
-
-            {item.name}
-            （¥{item.price}）
-          </label>
-        )
+          <button onClick={startGame}>
+            スタート
+          </button>
+        </>
       )}
 
-      <br />
-
-      <button onClick={mixNatto}>
-        混ぜる
-      </button>
-
-      {actualLength && (
-        <div className="prediction">
+      {phase === "mix" && (
+        <>
           <h2>
-            糸は何cmで切れる？
+            納豆を混ぜろ！！
+          </h2>
+
+          <h3>
+            残り {timeLeft} 秒
+          </h3>
+
+          <h3>
+            混ぜパワー
+            {mixPower}
+          </h3>
+
+          <div
+            ref={centerRef}
+            className="natto"
+          >
+            🫘
+          </div>
+
+          <p>
+            マウスをぐるぐる回せ！
+          </p>
+        </>
+      )}
+
+      {phase === "predict" && (
+        <>
+          <h2>
+            何cmで切れる？
           </h2>
 
           <input
-            type="number"
+            type="range"
+            min="0"
+            max="500"
             value={prediction}
             onChange={(e) =>
               setPrediction(
-                e.target.value
+                Number(e.target.value)
               )
             }
           />
 
+          <h2>
+            {prediction}cm
+          </h2>
+
           <button
-            onClick={submitPrediction}
+            onClick={startPull}
           >
-            回答
+            糸を引く
           </button>
-        </div>
+        </>
+      )}
+
+      {phase === "pull" && (
+        <>
+          <h2>
+            上にドラッグして糸を引く！
+          </h2>
+
+          <div className="pullVertical">
+            <div
+              className="chopstick"
+              onMouseDown={handleDragStart}
+              onMouseUp={handleDragEnd}
+              onMouseMove={handleDragMove}
+            >
+              🥢
+            </div>
+
+            <div
+              className="stringVertical"
+              style={{
+                height: dragLength + "px",
+              }}
+            />
+
+            <div className="bean">
+              🫘
+            </div>
+          </div>
+
+          <p>
+            {Math.round(
+              dragLength
+            )}
+            cm
+          </p>
+        </>
+      )}
+
+      {phase === "result" && (
+        <>
+          <h1>ブチッ！</h1>
+
+          <h2>
+            予想
+            {
+              result.predicted
+            }
+            cm
+          </h2>
+
+          <h2>
+            実際
+            {
+              result.actual
+            }
+            cm
+          </h2>
+
+          <h2>
+            誤差
+            {result.diff}
+            cm
+          </h2>
+
+          <h1>
+            ランク
+            {result.rank}
+          </h1>
+
+          <button
+            onClick={restart}
+          >
+            もう一回
+          </button>
+        </>
       )}
     </div>
   );
 }
-
-export default App;

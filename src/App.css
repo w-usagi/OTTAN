@@ -1,27 +1,72 @@
 body {
-  background: #f5deb3;
+  margin: 0;
   font-family: sans-serif;
+  background: #f6e5b8;
 }
 
 .container {
-  max-width: 700px;
-  margin: auto;
+  text-align: center;
   padding: 30px;
 }
 
-button {
-  padding: 10px 20px;
-  margin-top: 10px;
+.natto {
+  width: 180px;
+  height: 180px;
+  margin: auto;
+  border-radius: 50%;
+  background: #8b5a2b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 80px;
+  margin-top: 20px;
 }
 
-.topping {
-  display: block;
-  margin: 8px 0;
-}
-
-.prediction {
+.pullVertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-top: 30px;
-  padding: 20px;
-  border: 3px dashed brown;
-  background: white;
+}
+
+.stringVertical {
+  width: 8px;
+  background: #f7f0a3;
+  transition: height 0.05s;
+}
+
+.bean {
+  font-size: 60px;
+}
+
+.chopstick {
+  font-size: 60px;
+  cursor: grab;
+  user-select: none;
+}
+
+.bean {
+  font-size: 60px;
+}
+
+.string {
+  height: 6px;
+  background: #f7f0a3;
+  transition: width 0.05s;
+}
+
+.chopstick {
+  font-size: 60px;
+  cursor: grab;
+  user-select: none;
+}
+
+button {
+  padding: 12px 24px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+input[type="range"] {
+  width: 400px;
 }
