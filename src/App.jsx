@@ -24,6 +24,38 @@ export default function App() {
 
   const draggingRef = useRef(false);
 
+  const [karashi, setKarashi] = useState(false);
+
+  const [selectedToppings, setSelectedToppings] = useState([]);
+
+  const toppings = {
+    kimchi: {
+      name: "キムチ",
+      effect: (v) => v + 30,
+    },
+
+    negi: {
+      name: "ねぎ",
+      effect: (v) => v + 15,
+    },
+
+    rayu: {
+      name: "ラー油",
+      effect: (v) =>
+        v + (Math.random() * 60 - 30),
+    },
+
+    shiso: {
+      name: "青紫蘇ドレッシング",
+      effect: (v) => v * 1.3,
+    },
+
+    egg: {
+      name: "生卵",
+      effect: (v) => v * 1.5,
+    },
+  };
+
   const startGame = () => {
     setPhase("mix");
     setTimeLeft(5);
@@ -35,12 +67,26 @@ export default function App() {
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          const length = Math.max(
+          let length =
+            Math.sqrt(
+              mixPowerRef.current
+            ) * 12 +
+            Math.random() * 30;
+
+          if (karashi) {
+            length *= 0.9;
+          }
+
+          selectedToppings.forEach(
+            (id) => {
+              length =
+                toppings[id].effect(length);
+            }
+          );
+
+          length = Math.max(
             20,
-            Math.round(
-              Math.sqrt(mixPowerRef.current) * 12 +
-              Math.random() * 30
-            )
+            Math.round(length)
           );
 
           setActualLength(length);
@@ -56,7 +102,7 @@ export default function App() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [phase]);
+  }, [phase, karashi, selectedToppings]);
 
   const handleMouseMove = (e) => {
     if (phase !== "mix") return;
@@ -159,6 +205,9 @@ export default function App() {
     setTimeLeft(5);
 
     lastAngleRef.current = null;
+
+    setKarashi(false);
+    setSelectedToppings([]);
   };
 
   return (
@@ -174,7 +223,58 @@ export default function App() {
             納豆糸長さ予測ゲーム
           </h2>
 
-          <button onClick={startGame}>
+          <h3>調味料</h3>
+
+          <label>
+            <input
+              type="checkbox"
+              checked={karashi}
+              onChange={(e) =>
+                setKarashi(
+                  e.target.checked
+                )
+              }
+            />
+            からし
+          </label>
+
+          <h3>課金薬味</h3>
+
+          {Object.entries(toppings).map(
+            ([id, item]) => (
+              <label
+                key={id}
+                style={{
+                  display: "block",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedToppings.includes(
+                    id
+                  )}
+                  onChange={() => {
+                    setSelectedToppings((prev) =>
+                      prev.includes(id)
+                        ? prev.filter(
+                          (x) => x !== id
+                        )
+                        : [...prev, id]
+                    );
+                  }}
+                />
+
+                {item.name}
+              </label>
+            )
+          )}
+
+          <button
+            onClick={startGame}
+            style={{
+              marginTop: "20px",
+            }}
+          >
             スタート
           </button>
         </>
@@ -300,6 +400,21 @@ export default function App() {
             {result.diff}
             cm
           </h2>
+
+          <p>
+            からし:
+            {karashi
+              ? "あり"
+              : "なし"}
+          </p>
+
+          <p>
+            薬味:
+            {selectedToppings.length
+              ? selectedToppings.map((id) => toppings[id].name)
+                .join(", ")
+              : "なし"}
+          </p>
 
           <h1>
             ランク
