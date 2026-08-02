@@ -9,19 +9,20 @@ body {
   padding: 30px;
 }
 
+/* 混ぜる納豆エリア */
 .natto {
-  width: 180px;
-  height: 180px;
-  margin: auto;
-  border-radius: 50%;
-  background: #8b5a2b;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 80px;
-  margin-top: 20px;
+  width: 320px;
+  height: 320px;
+  margin: 20px auto;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  
+  /* ドット絵をくっきり表示させる指定 */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
+/* 糸引きエリア */
 .pullVertical {
   display: flex;
   flex-direction: column;
@@ -35,10 +36,6 @@ body {
   transition: height 0.05s;
 }
 
-.bean {
-  font-size: 60px;
-}
-
 .chopstick {
   font-size: 60px;
   cursor: grab;
@@ -49,18 +46,7 @@ body {
   font-size: 60px;
 }
 
-.string {
-  height: 6px;
-  background: #f7f0a3;
-  transition: width 0.05s;
-}
-
-.chopstick {
-  font-size: 60px;
-  cursor: grab;
-  user-select: none;
-}
-
+/* フォーム系・ボタン */
 button {
   padding: 12px 24px;
   font-size: 18px;
@@ -69,4 +55,15 @@ button {
 
 input[type="range"] {
   width: 400px;
+}
+
+/* 単体の納豆（位置調整用） */
+.natto {
+  width: 320px;
+  height: 320px;
+  margin: 20px auto;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
